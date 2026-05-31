@@ -196,7 +196,7 @@
             user-select: none;
         }
         .chess-square.light { background: #f0d9b5; }
-        .chess-square.dark { background: #b58863; }
+        .chess-square.dark { background: #5d4e37; }
         .chess-square.selected { background: #7fc97f !important; }
         .chess-square.valid-move { background: #aaffaa !important; }
         .chess-square.valid-move::after {
@@ -594,6 +594,10 @@
                 selectedSquare = null;
                 validMoves = [];
                 renderChess();
+                // Auto AI move after player moves (if game not over and it's black's turn)
+                if (!chess.game_over() && chess.turn() === 'b') {
+                    setTimeout(makeAIMove, 500);
+                }
                 return;
             }
 
