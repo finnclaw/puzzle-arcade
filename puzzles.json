@@ -1,0 +1,176 @@
+{
+  "riddles": [
+    {
+      "id": "r001",
+      "question": "I speak without a mouth and hear without ears. I have no body, but I come alive with the wind. What am I?",
+      "answer": "An echo",
+      "difficulty": "medium",
+      "category": "classic"
+    },
+    {
+      "id": "r002",
+      "question": "The more you take, the more you leave behind. What am I?",
+      "answer": "Footsteps",
+      "difficulty": "easy",
+      "category": "classic"
+    },
+    {
+      "id": "r003",
+      "question": "I have cities, but no houses live there. I have mountains, but no trees grow there. I have water, but no fish swim there. I have roads, but no cars drive there. What am I?",
+      "answer": "A map",
+      "difficulty": "medium",
+      "category": "classic"
+    },
+    {
+      "id": "r004",
+      "question": "What can travel around the world while staying in a corner?",
+      "answer": "A stamp",
+      "difficulty": "easy",
+      "category": "classic"
+    },
+    {
+      "id": "r005",
+      "question": "I am not alive, but I grow. I don't have lungs, but I need air. I don't have a mouth, but water kills me. What am I?",
+      "answer": "Fire",
+      "difficulty": "easy",
+      "category": "classic"
+    },
+    {
+      "id": "r006",
+      "question": "The person who makes it, sells it. The person who buys it never uses it. The person who uses it never knows they're using it. What is it?",
+      "answer": "A coffin",
+      "difficulty": "hard",
+      "category": "dark"
+    },
+    {
+      "id": "r007",
+      "question": "I can be cracked, made, told, and played. What am I?",
+      "answer": "A joke",
+      "difficulty": "medium",
+      "category": "wordplay"
+    },
+    {
+      "id": "r008",
+      "question": "What has keys but no locks, space but no room, and you can enter but can't go inside?",
+      "answer": "A keyboard",
+      "difficulty": "medium",
+      "category": "modern"
+    },
+    {
+      "id": "r009",
+      "question": "I am always hungry and will die if not fed, but whatever I touch will soon turn red. What am I?",
+      "answer": "Fire",
+      "difficulty": "medium",
+      "category": "classic"
+    },
+    {
+      "id": "r010",
+      "question": "What disappears as soon as you say its name?",
+      "answer": "Silence",
+      "difficulty": "easy",
+      "category": "classic"
+    }
+  ],
+  "logic_puzzles": [
+    {
+      "id": "l001",
+      "question": "A man is looking at a photograph. Someone asks him, 'Whose picture are you looking at?' He replies: 'Brothers and sisters have I none, but this man's father is my father's son.' Whose picture is the man looking at?",
+      "answer": "His son",
+      "explanation": "'My father's son' is himself (since he has no brothers). So 'this man's father is me' means the photo is of his son.",
+      "difficulty": "hard",
+      "category": "family"
+    },
+    {
+      "id": "l002",
+      "question": "You have two ropes. Each rope takes exactly 60 minutes to burn from one end to the other. The ropes are not uniform - they don't burn at a constant rate. How can you measure exactly 45 minutes using only these two ropes and a lighter?",
+      "answer": "Light both ends of rope 1 and one end of rope 2. When rope 1 burns out (30 min), light the other end of rope 2. When rope 2 burns out, 45 minutes have passed.",
+      "explanation": "Burning rope 1 from both ends takes 30 min. At that point, rope 2 has 30 min of burn left, but lighting its other end halves the remaining time to 15 min. 30 + 15 = 45.",
+      "difficulty": "hard",
+      "category": "lateral"
+    },
+    {
+      "id": "l003",
+      "question": "There are three switches downstairs. Each corresponds to one of three light bulbs upstairs. You can flip switches all you want, but you can only go upstairs once. How do you determine which switch controls which bulb?",
+      "answer": "Turn switch 1 on for 10 minutes, then turn it off. Turn switch 2 on. Go upstairs. The hot bulb is switch 1, the on bulb is switch 2, the cold off bulb is switch 3.",
+      "explanation": "Light bulbs get warm when on. By using both light and heat, you can identify all three with one trip.",
+      "difficulty": "medium",
+      "category": "lateral"
+    },
+    {
+      "id": "l004",
+      "question": "You're in a room with three doors. Behind one door is a prize. Behind the other two are nothing. You pick door 1. The host, who knows what's behind each door, opens door 3 to reveal nothing. Should you switch to door 2, stay with door 1, or does it not matter?",
+      "answer": "Switch to door 2. Switching gives you a 2/3 chance of winning.",
+      "explanation": "This is the Monty Hall problem. Initially you had 1/3 chance. The host's reveal doesn't change your door's probability - the 2/3 chance that was split between doors 2 and 3 now concentrates on door 2.",
+      "difficulty": "hard",
+      "category": "probability"
+    },
+    {
+      "id": "l005",
+      "question": "Five pirates have 100 gold coins to divide. They vote on proposals in order of seniority. If a proposal gets 50% or more votes, it passes. If it fails, that pirate is thrown overboard and the next proposes. Pirates are logical and want to survive first, then maximize gold. What should the most senior pirate propose?",
+      "answer": "The most senior pirate proposes: 98 for himself, 0, 1, 0, 1 for the others.",
+      "explanation": "Working backwards: with 2 pirates, senior takes all. With 3, senior gives 1 coin to the last pirate for a majority. With 4, senior gives 1 to the 3rd pirate. With 5, senior needs 2 other votes, so gives 1 coin each to pirates 3 and 5.",
+      "difficulty": "hard",
+      "category": "game_theory"
+    }
+  ],
+  "number_sequences": [
+    {
+      "id": "n001",
+      "sequence": [2, 4, 8, 16, 32, "?"],
+      "answer": "64",
+      "explanation": "Each number is doubled. 32 × 2 = 64.",
+      "difficulty": "easy"
+    },
+    {
+      "id": "n002",
+      "sequence": [1, 1, 2, 3, 5, 8, 13, "?"],
+      "answer": "21",
+      "explanation": "Fibonacci sequence. Each number is the sum of the two before it. 8 + 13 = 21.",
+      "difficulty": "easy"
+    },
+    {
+      "id": "n003",
+      "sequence": [1, 4, 9, 16, 25, "?"],
+      "answer": "36",
+      "explanation": "Square numbers. 1², 2², 3², 4², 5², 6² = 36.",
+      "difficulty": "easy"
+    },
+    {
+      "id": "n004",
+      "sequence": [2, 3, 5, 7, 11, 13, "?"],
+      "answer": "17",
+      "explanation": "Prime numbers. The next prime after 13 is 17.",
+      "difficulty": "medium"
+    },
+    {
+      "id": "n005",
+      "sequence": [1, 11, 21, 1211, 111221, "?"],
+      "answer": "312211",
+      "explanation": "Look-and-say sequence. Each term describes the previous: '111221' is 'three 1s, two 2s, one 1' = 312211.",
+      "difficulty": "hard"
+    }
+  ],
+  "word_puzzles": [
+    {
+      "id": "w001",
+      "question": "What 8-letter word can have a letter taken away and still make a word, and keep doing that until you have 1 letter left?",
+      "answer": "STARTING → STARING → STRING → STING → SING → SIN → IN → I",
+      "difficulty": "hard",
+      "category": "word_reduction"
+    },
+    {
+      "id": "w002",
+      "question": "I am a word of 5 letters. If you remove the first letter, I am a country. If you remove the first two letters, I am the opposite of that word. What am I?",
+      "answer": "WOMAN (OMAN, MAN)",
+      "difficulty": "medium",
+      "category": "wordplay"
+    },
+    {
+      "id": "w003",
+      "question": "What word in the English language does the following: the first two letters signify a male, the first three letters signify a female, the first four letters signify a great, while the entire word signifies a great woman?",
+      "answer": "HEROINE (HE, HER, HERO, HEROINE)",
+      "difficulty": "medium",
+      "category": "wordplay"
+    }
+  ]
+}
