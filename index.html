@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🦝 Puzzle Arcade</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -13,7 +14,7 @@
             color: #fff;
             padding: 20px;
         }
-        .container { max-width: 800px; margin: 0 auto; }
+        .container { max-width: 900px; margin: 0 auto; }
         header {
             text-align: center;
             padding: 40px 0;
@@ -58,6 +59,7 @@
         .puzzle-type.logic { background: #2196F3; }
         .puzzle-type.sequence { background: #FF9800; }
         .puzzle-type.word { background: #E91E63; }
+        .puzzle-type.chess { background: #795548; }
         .difficulty {
             display: inline-block;
             padding: 4px 12px;
@@ -96,11 +98,14 @@
             font-size: 1em;
             transition: all 0.2s;
             margin-right: 10px;
+            margin-bottom: 10px;
         }
         .btn-primary { background: #4CAF50; color: #fff; }
         .btn-primary:hover { background: #45a049; }
         .btn-secondary { background: rgba(255,255,255,0.1); color: #fff; }
         .btn-secondary:hover { background: rgba(255,255,255,0.2); }
+        .btn-danger { background: #f44336; color: #fff; }
+        .btn-danger:hover { background: #d32f2f; }
         .answer-reveal {
             margin-top: 15px;
             padding: 15px;
@@ -163,6 +168,85 @@
         }
         .sequence-option:hover { border-color: #4CAF50; }
         .sequence-option.selected { border-color: #4CAF50; background: rgba(76, 175, 80, 0.2); }
+
+        /* Chess Styles */
+        .chess-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+        }
+        .chess-board {
+            display: grid;
+            grid-template-columns: repeat(8, 50px);
+            grid-template-rows: repeat(8, 50px);
+            border: 3px solid #8b4513;
+            border-radius: 4px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        .chess-square {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .chess-square.light { background: #f0d9b5; }
+        .chess-square.dark { background: #b58863; }
+        .chess-square.selected { background: #7fc97f !important; }
+        .chess-square.valid-move { background: #aaffaa !important; }
+        .chess-square.valid-move::after {
+            content: '';
+            width: 15px;
+            height: 15px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 50%;
+        }
+        .chess-square.valid-capture { background: #ffaaaa !important; }
+        .chess-square.last-move { box-shadow: inset 0 0 0 3px #ffff00; }
+        .chess-square:hover { opacity: 0.8; }
+        .chess-info {
+            min-width: 250px;
+        }
+        .chess-status {
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            text-align: center;
+        }
+        .chess-status.check { background: rgba(255, 100, 100, 0.3); }
+        .chess-status.checkmate { background: rgba(255, 215, 0, 0.3); }
+        .chess-moves {
+            max-height: 200px;
+            overflow-y: auto;
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-family: monospace;
+        }
+        .chess-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .captured-pieces {
+            padding: 10px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            min-height: 50px;
+        }
+        .captured-white, .captured-black {
+            font-size: 24px;
+            letter-spacing: 2px;
+        }
     </style>
 </head>
 <body>
@@ -174,6 +258,7 @@
 
         <div class="tabs">
             <button class="tab active" onclick="showTab('daily')">📅 Daily</button>
+            <button class="tab" onclick="showTab('chess')">♟️ Chess</button>
             <button class="tab" onclick="showTab('riddle')">🎭 Riddles</button>
             <button class="tab" onclick="showTab('logic')">🧠 Logic</button>
             <button class="tab" onclick="showTab('sequence')">🔢 Sequences</button>
@@ -193,6 +278,7 @@
         </div>
 
         <div id="puzzleArea"></div>
+        <div id="chessArea" style="display:none;"></div>
         <div id="leaderboardArea" style="display:none;"></div>
     </div>
 
@@ -231,21 +317,33 @@
 
         let scores = JSON.parse(localStorage.getItem('puzzleScores') || '{"Jax":0,"Archie":0,"Knox":0,"Finn":0,"Rohan":0}');
         let solved = JSON.parse(localStorage.getItem('puzzleSolved') || '{}');
+        let chessWins = JSON.parse(localStorage.getItem('chessWins') || '{"Jax":0,"Archie":0,"Knox":0,"Finn":0,"Rohan":0}');
         let currentTab = 'daily';
         let selectedAnswer = null;
+
+        // Chess state
+        let chess = null;
+        let selectedSquare = null;
+        let validMoves = [];
+        let lastMove = null;
 
         function showTab(tab) {
             currentTab = tab;
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             event.target.classList.add('active');
 
+            document.getElementById('puzzleArea').style.display = 'none';
+            document.getElementById('chessArea').style.display = 'none';
+            document.getElementById('leaderboardArea').style.display = 'none';
+
             if (tab === 'leaderboard') {
-                document.getElementById('puzzleArea').style.display = 'none';
                 document.getElementById('leaderboardArea').style.display = 'block';
                 renderLeaderboard();
+            } else if (tab === 'chess') {
+                document.getElementById('chessArea').style.display = 'block';
+                initChess();
             } else {
                 document.getElementById('puzzleArea').style.display = 'block';
-                document.getElementById('leaderboardArea').style.display = 'none';
                 renderPuzzle(tab);
             }
         }
@@ -349,12 +447,13 @@
         function renderLeaderboard() {
             const area = document.getElementById('leaderboardArea');
             const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+            const chessSorted = Object.entries(chessWins).sort((a, b) => b[1] - a[1]);
             const emojis = { Jax: '🦝', Archie: '🦘', Knox: '🏰', Finn: '🦊', Rohan: '🦅' };
             const medals = ['🥇', '🥈', '🥉', '', ''];
 
             area.innerHTML = `
                 <div class="leaderboard">
-                    <h2>🏆 Leaderboard</h2>
+                    <h2>🏆 Puzzle Points</h2>
                     ${sorted.map(([name, score], i) => `
                         <div class="leader-row">
                             <span class="leader-name">${medals[i]} ${emojis[name] || ''} ${name}</span>
@@ -362,7 +461,217 @@
                         </div>
                     `).join('')}
                 </div>
+                <div class="leaderboard" style="margin-top: 20px;">
+                    <h2>♟️ Chess Wins</h2>
+                    ${chessSorted.map(([name, wins], i) => `
+                        <div class="leader-row">
+                            <span class="leader-name">${medals[i]} ${emojis[name] || ''} ${name}</span>
+                            <span class="leader-score">${wins} wins</span>
+                        </div>
+                    `).join('')}
+                </div>
             `;
+        }
+
+        // ============ CHESS ============
+        const pieceSymbols = {
+            'wK': '♔', 'wQ': '♕', 'wR': '♖', 'wB': '♗', 'wN': '♘', 'wP': '♙',
+            'bK': '♚', 'bQ': '♛', 'bR': '♜', 'bB': '♝', 'bN': '♞', 'bP': '♟'
+        };
+
+        function initChess() {
+            chess = new Chess();
+            selectedSquare = null;
+            validMoves = [];
+            lastMove = null;
+            renderChess();
+        }
+
+        function renderChess() {
+            const area = document.getElementById('chessArea');
+            const board = chess.board();
+            const history = chess.history();
+
+            let capturedWhite = [];
+            let capturedBlack = [];
+
+            // Calculate captured pieces from move history
+            const allHistory = chess.history({ verbose: true });
+            for (const move of allHistory) {
+                if (move.captured) {
+                    const color = move.color === 'w' ? 'b' : 'w';
+                    const piece = color + move.captured.toUpperCase();
+                    if (color === 'w') capturedWhite.push(pieceSymbols[piece]);
+                    else capturedBlack.push(pieceSymbols[piece]);
+                }
+            }
+
+            let status = '';
+            let statusClass = '';
+            if (chess.isCheckmate()) {
+                const winner = chess.turn() === 'w' ? 'Black' : 'White';
+                status = `♚ CHECKMATE! ${winner} wins!`;
+                statusClass = 'checkmate';
+            } else if (chess.isDraw()) {
+                status = '🤝 Draw!';
+            } else if (chess.isCheck()) {
+                status = `⚠️ ${chess.turn() === 'w' ? 'White' : 'Black'} is in CHECK!`;
+                statusClass = 'check';
+            } else {
+                status = `${chess.turn() === 'w' ? '⬜ White' : '⬛ Black'} to move`;
+            }
+
+            let boardHtml = '<div class="chess-board">';
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    const square = String.fromCharCode(97 + col) + (8 - row);
+                    const piece = board[row][col];
+                    const isLight = (row + col) % 2 === 0;
+                    const isSelected = selectedSquare === square;
+                    const isValidMove = validMoves.includes(square);
+                    const isCapture = isValidMove && piece;
+                    const isLastMove = lastMove && (lastMove.from === square || lastMove.to === square);
+
+                    let classes = `chess-square ${isLight ? 'light' : 'dark'}`;
+                    if (isSelected) classes += ' selected';
+                    if (isValidMove && !isCapture) classes += ' valid-move';
+                    if (isCapture) classes += ' valid-capture';
+                    if (isLastMove) classes += ' last-move';
+
+                    const pieceKey = piece ? (piece.color + piece.type.toUpperCase()) : '';
+                    const pieceChar = piece ? pieceSymbols[pieceKey] : '';
+
+                    boardHtml += `<div class="${classes}" onclick="clickSquare('${square}')">${pieceChar}</div>`;
+                }
+            }
+            boardHtml += '</div>';
+
+            const movesHtml = history.length > 0 ?
+                history.reduce((acc, move, i) => {
+                    if (i % 2 === 0) return acc + `${Math.floor(i/2) + 1}. ${move} `;
+                    return acc + `${move}<br>`;
+                }, '') : 'No moves yet';
+
+            area.innerHTML = `
+                <div class="puzzle-card">
+                    <span class="puzzle-type chess">CHESS</span>
+                    <div class="chess-container">
+                        ${boardHtml}
+                        <div class="chess-info">
+                            <div class="chess-status ${statusClass}">${status}</div>
+                            <div class="captured-pieces">
+                                <div class="captured-white">${capturedWhite.join('')}</div>
+                                <div class="captured-black">${capturedBlack.join('')}</div>
+                            </div>
+                            <div class="chess-moves">${movesHtml}</div>
+                            <div class="chess-controls">
+                                <button class="btn btn-primary" onclick="makeAIMove()">🤖 AI Move</button>
+                                <button class="btn btn-secondary" onclick="undoMove()">↩️ Undo</button>
+                                <button class="btn btn-danger" onclick="initChess()">🔄 New Game</button>
+                                ${chess.isGameOver() ? `<button class="btn btn-primary" onclick="recordWin()">📊 Record Win</button>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function clickSquare(square) {
+            if (chess.isGameOver()) return;
+
+            const piece = chess.get(square);
+
+            // If we have a selected piece and clicked a valid move
+            if (selectedSquare && validMoves.includes(square)) {
+                const move = chess.move({
+                    from: selectedSquare,
+                    to: square,
+                    promotion: 'q' // Always promote to queen for simplicity
+                });
+                if (move) {
+                    lastMove = move;
+                }
+                selectedSquare = null;
+                validMoves = [];
+                renderChess();
+                return;
+            }
+
+            // Select a piece
+            if (piece && piece.color === chess.turn()) {
+                selectedSquare = square;
+                validMoves = chess.moves({ square: square, verbose: true }).map(m => m.to);
+            } else {
+                selectedSquare = null;
+                validMoves = [];
+            }
+            renderChess();
+        }
+
+        function makeAIMove() {
+            if (chess.isGameOver()) return;
+
+            const moves = chess.moves();
+            if (moves.length === 0) return;
+
+            // Simple AI: prioritize captures, checks, then random
+            let bestMoves = [];
+            for (const move of moves) {
+                chess.move(move);
+                if (chess.isCheckmate()) {
+                    chess.undo();
+                    chess.move(move);
+                    lastMove = chess.history({ verbose: true }).slice(-1)[0];
+                    renderChess();
+                    return;
+                }
+                chess.undo();
+            }
+
+            // Look for checks
+            for (const move of moves) {
+                chess.move(move);
+                if (chess.isCheck()) bestMoves.push(move);
+                chess.undo();
+            }
+
+            // Look for captures
+            if (bestMoves.length === 0) {
+                const captures = chess.moves({ verbose: true }).filter(m => m.captured);
+                bestMoves = captures.map(m => m.san);
+            }
+
+            // Random if nothing special
+            if (bestMoves.length === 0) bestMoves = moves;
+
+            const randomMove = bestMoves[Math.floor(Math.random() * bestMoves.length)];
+            chess.move(randomMove);
+            lastMove = chess.history({ verbose: true }).slice(-1)[0];
+            renderChess();
+        }
+
+        function undoMove() {
+            chess.undo();
+            lastMove = chess.history({ verbose: true }).slice(-1)[0] || null;
+            selectedSquare = null;
+            validMoves = [];
+            renderChess();
+        }
+
+        function recordWin() {
+            if (!chess.isGameOver()) return;
+
+            let winner = null;
+            if (chess.isCheckmate()) {
+                winner = chess.turn() === 'w' ? 'Black' : 'White';
+            }
+
+            if (winner) {
+                const player = document.getElementById('playerSelect').value;
+                chessWins[player] = (chessWins[player] || 0) + 1;
+                localStorage.setItem('chessWins', JSON.stringify(chessWins));
+                alert(`🏆 ${player} recorded a chess win!`);
+            }
         }
 
         // Initialize
