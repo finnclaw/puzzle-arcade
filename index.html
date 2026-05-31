@@ -257,13 +257,13 @@
         </header>
 
         <div class="tabs">
-            <button class="tab active" onclick="showTab('daily')">📅 Daily</button>
-            <button class="tab" onclick="showTab('chess')">♟️ Chess</button>
-            <button class="tab" onclick="showTab('riddle')">🎭 Riddles</button>
-            <button class="tab" onclick="showTab('logic')">🧠 Logic</button>
-            <button class="tab" onclick="showTab('sequence')">🔢 Sequences</button>
-            <button class="tab" onclick="showTab('word')">📝 Words</button>
-            <button class="tab" onclick="showTab('leaderboard')">🏆 Scores</button>
+            <button class="tab active" onclick="showTab('daily', event)">📅 Daily</button>
+            <button class="tab" onclick="showTab('chess', event)">♟️ Chess</button>
+            <button class="tab" onclick="showTab('riddle', event)">🎭 Riddles</button>
+            <button class="tab" onclick="showTab('logic', event)">🧠 Logic</button>
+            <button class="tab" onclick="showTab('sequence', event)">🔢 Sequences</button>
+            <button class="tab" onclick="showTab('word', event)">📝 Words</button>
+            <button class="tab" onclick="showTab('leaderboard', event)">🏆 Scores</button>
         </div>
 
         <div>
@@ -327,10 +327,10 @@
         let validMoves = [];
         let lastMove = null;
 
-        function showTab(tab) {
+        function showTab(tab, evt) {
             currentTab = tab;
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
+            if (evt && evt.target) evt.target.classList.add('active');
 
             document.getElementById('puzzleArea').style.display = 'none';
             document.getElementById('chessArea').style.display = 'none';
@@ -508,13 +508,13 @@
 
             let status = '';
             let statusClass = '';
-            if (chess.isCheckmate()) {
+            if (chess.in_checkmate()) {
                 const winner = chess.turn() === 'w' ? 'Black' : 'White';
                 status = `♚ CHECKMATE! ${winner} wins!`;
                 statusClass = 'checkmate';
-            } else if (chess.isDraw()) {
+            } else if (chess.in_draw()) {
                 status = '🤝 Draw!';
-            } else if (chess.isCheck()) {
+            } else if (chess.in_check()) {
                 status = `⚠️ ${chess.turn() === 'w' ? 'White' : 'Black'} is in CHECK!`;
                 statusClass = 'check';
             } else {
@@ -568,7 +568,7 @@
                                 <button class="btn btn-primary" onclick="makeAIMove()">🤖 AI Move</button>
                                 <button class="btn btn-secondary" onclick="undoMove()">↩️ Undo</button>
                                 <button class="btn btn-danger" onclick="initChess()">🔄 New Game</button>
-                                ${chess.isGameOver() ? `<button class="btn btn-primary" onclick="recordWin()">📊 Record Win</button>` : ''}
+                                ${chess.game_over() ? `<button class="btn btn-primary" onclick="recordWin()">📊 Record Win</button>` : ''}
                             </div>
                         </div>
                     </div>
@@ -577,7 +577,7 @@
         }
 
         function clickSquare(square) {
-            if (chess.isGameOver()) return;
+            if (chess.game_over()) return;
 
             const piece = chess.get(square);
 
@@ -609,7 +609,7 @@
         }
 
         function makeAIMove() {
-            if (chess.isGameOver()) return;
+            if (chess.game_over()) return;
 
             const moves = chess.moves();
             if (moves.length === 0) return;
@@ -618,7 +618,7 @@
             let bestMoves = [];
             for (const move of moves) {
                 chess.move(move);
-                if (chess.isCheckmate()) {
+                if (chess.in_checkmate()) {
                     chess.undo();
                     chess.move(move);
                     lastMove = chess.history({ verbose: true }).slice(-1)[0];
@@ -631,7 +631,7 @@
             // Look for checks
             for (const move of moves) {
                 chess.move(move);
-                if (chess.isCheck()) bestMoves.push(move);
+                if (chess.in_check()) bestMoves.push(move);
                 chess.undo();
             }
 
@@ -659,10 +659,10 @@
         }
 
         function recordWin() {
-            if (!chess.isGameOver()) return;
+            if (!chess.game_over()) return;
 
             let winner = null;
-            if (chess.isCheckmate()) {
+            if (chess.in_checkmate()) {
                 winner = chess.turn() === 'w' ? 'Black' : 'White';
             }
 
