@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puzzle Arcade</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #eee;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle { text-align: center; color: #888; margin-bottom: 30px; }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .tab {
+            padding: 10px 20px;
+            background: #2d3436;
+            border: none;
+            border-radius: 8px;
+            color: #eee;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tab:hover { background: #636e72; }
+        .tab.active { background: #6c5ce7; }
+        .puzzle-card {
+            background: #2d3436;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .puzzle-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .puzzle-type { font-size: 0.9em; color: #a29bfe; }
+        .puzzle-difficulty {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+        }
+        .easy { background: #00b894; }
+        .medium { background: #fdcb6e; color: #2d3436; }
+        .hard { background: #e17055; }
+        .puzzle-question {
+            font-size: 1.3em;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+        .answer-section {
+            display: flex;
+            gap: 10px;
+        }
+        .answer-input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #636e72;
+            border-radius: 8px;
+            background: #1a1a2e;
+            color: #eee;
+            font-size: 1em;
+        }
+        .answer-input:focus { border-color: #6c5ce7; outline: none; }
+        .submit-btn {
+            padding: 15px 30px;
+            background: #6c5ce7;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .submit-btn:hover { background: #5f3dc4; transform: scale(1.05); }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.1em;
+            display: none;
+        }
+        .result.correct { background: #00b894; display: block; }
+        .result.wrong { background: #e17055; display: block; }
+        .next-btn {
+            display: block;
+            margin: 20px auto;
+            padding: 12px 25px;
+            background: #00b894;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+        }
+        .stats {
+            background: #2d3436;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stats h2 { margin-bottom: 15px; }
+        .stat-row { display: flex; justify-content: center; gap: 40px; }
+        .stat { text-align: center; }
+        .stat-value { font-size: 2em; color: #6c5ce7; }
+        .stat-label { color: #888; }
+        .leaderboard {
+            margin-top: 20px;
+            text-align: left;
+        }
+        .leaderboard-entry {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #444;
+        }
+        .hint-btn {
+            background: #636e72;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            color: #eee;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .hint { color: #feca57; margin-top: 10px; font-style: italic; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Puzzle Arcade</h1>
+        <p class="subtitle">Built by Jax 🦝 for the crew</p>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showCategory('riddle')">🎭 Riddles</button>
+            <button class="tab" onclick="showCategory('logic')">🧠 Logic</button>
+            <button class="tab" onclick="showCategory('sequence')">🔢 Sequences</button>
+            <button class="tab" onclick="showCategory('word')">📝 Words</button>
+            <button class="tab" onclick="showStats()">🏆 Scores</button>
+        </div>
+
+        <div id="puzzle-container"></div>
+        <div id="stats-container" style="display:none"></div>
+    </div>
+
+    <script>
+        const puzzles = {
+            riddle: [
+                { q: "I speak without a mouth and hear without ears. I have no body, but I come alive with the wind. What am I?", a: "echo", hint: "Sound bouncing back", difficulty: "medium" },
+                { q: "The more you take, the more you leave behind. What am I?", a: "footsteps", hint: "Walking away", difficulty: "easy" },
+                { q: "I can be cracked, made, told, and played. What am I?", a: "joke", hint: "Makes you laugh", difficulty: "medium" },
+                { q: "What has keys but no locks, space but no room, and you can enter but can't go inside?", a: "keyboard", hint: "You're probably using one now", difficulty: "easy" },
+                { q: "I have cities, but no houses. I have mountains, but no trees. I have water, but no fish. What am I?", a: "map", hint: "Helps you navigate", difficulty: "medium" },
+            ],
+            logic: [
+                { q: "You have 3 boxes. One contains only apples, one contains only oranges, and one contains both. All labels are wrong. You can pick one fruit from one box. How do you label all boxes correctly?", a: "mixed", hint: "Pick from the box labeled 'mixed'", difficulty: "hard" },
+                { q: "A man is looking at a photo. Someone asks who it is. He replies: 'Brothers and sisters I have none, but that man's father is my father's son.' Who is in the photo?", a: "son", hint: "'My father's son' when you have no siblings...", difficulty: "medium" },
+                { q: "If you have a 3-gallon jug and a 5-gallon jug, how do you measure exactly 4 gallons?", a: "fill 5 pour into 3 empty 3 pour remaining 2 into 3 fill 5 pour into 3 until full", hint: "Fill, pour, empty, repeat...", difficulty: "hard" },
+            ],
+            sequence: [
+                { q: "What comes next? 2, 6, 12, 20, 30, ?", a: "42", hint: "Differences increase by 2 each time", difficulty: "medium" },
+                { q: "What comes next? 1, 1, 2, 3, 5, 8, ?", a: "13", hint: "Famous sequence", difficulty: "easy" },
+                { q: "What comes next? 1, 4, 9, 16, 25, ?", a: "36", hint: "Perfect...", difficulty: "easy" },
+                { q: "What comes next? 3, 3, 5, 4, 4, 3, 5, ?", a: "5", hint: "Count the letters in 1, 2, 3...", difficulty: "hard" },
+            ],
+            word: [
+                { q: "Rearrange these letters to form a single word: NEW DOOR", a: "one word", hint: "It's a trick question", difficulty: "hard" },
+                { q: "What 8-letter word contains only one letter?", a: "envelope", hint: "You mail it", difficulty: "medium" },
+                { q: "I am a word of six letters. My first three letters refer to an automobile. My last three letters refer to a household animal. My whole is used in your bedroom. What am I?", a: "carpet", hint: "CAR + PET", difficulty: "medium" },
+            ]
+        };
+
+        let currentCategory = 'riddle';
+        let currentIndex = 0;
+        let scores = JSON.parse(localStorage.getItem('puzzleScores') || '{}');
+        let solved = JSON.parse(localStorage.getItem('puzzleSolved') || '[]');
+
+        function showCategory(cat) {
+            currentCategory = cat;
+            currentIndex = 0;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('stats-container').style.display = 'none';
+            showPuzzle();
+        }
+
+        function showPuzzle() {
+            const container = document.getElementById('puzzle-container');
+            const puzzle = puzzles[currentCategory][currentIndex];
+            const puzzleId = `${currentCategory}-${currentIndex}`;
+            const alreadySolved = solved.includes(puzzleId);
+
+            container.innerHTML = `
+                <div class="puzzle-card">
+                    <div class="puzzle-header">
+                        <span class="puzzle-type">${getCategoryEmoji(currentCategory)} ${currentCategory.toUpperCase()} #${currentIndex + 1}</span>
+                        <span class="puzzle-difficulty ${puzzle.difficulty}">${puzzle.difficulty.toUpperCase()}</span>
+                    </div>
+                    <p class="puzzle-question">${puzzle.q}</p>
+                    ${alreadySolved ? '<div class="result correct">✅ Already solved!</div>' : `
+                    <div class="answer-section">
+                        <input type="text" class="answer-input" id="answer" placeholder="Your answer..." onkeypress="if(event.key==='Enter')checkAnswer()">
+                        <button class="submit-btn" onclick="checkAnswer()">Submit</button>
+                    </div>
+                    <button class="hint-btn" onclick="showHint()">💡 Hint</button>
+                    <p class="hint" id="hint" style="display:none">${puzzle.hint}</p>
+                    `}
+                    <div class="result" id="result"></div>
+                </div>
+                <div style="text-align:center">
+                    ${currentIndex > 0 ? '<button class="next-btn" onclick="prevPuzzle()">← Previous</button>' : ''}
+                    ${currentIndex < puzzles[currentCategory].length - 1 ? '<button class="next-btn" onclick="nextPuzzle()">Next →</button>' : ''}
+                </div>
+            `;
+            container.style.display = 'block';
+        }
+
+        function getCategoryEmoji(cat) {
+            return { riddle: '🎭', logic: '🧠', sequence: '🔢', word: '📝' }[cat];
+        }
+
+        function checkAnswer() {
+            const input = document.getElementById('answer').value.toLowerCase().trim();
+            const puzzle = puzzles[currentCategory][currentIndex];
+            const result = document.getElementById('result');
+            const puzzleId = `${currentCategory}-${currentIndex}`;
+
+            if (input === puzzle.a.toLowerCase() || input.includes(puzzle.a.toLowerCase())) {
+                result.className = 'result correct';
+                result.textContent = '🎉 Correct!';
+                if (!solved.includes(puzzleId)) {
+                    solved.push(puzzleId);
+                    const player = prompt('Enter your name for the leaderboard:') || 'Anonymous';
+                    const points = { easy: 1, medium: 2, hard: 3 }[puzzle.difficulty];
+                    scores[player] = (scores[player] || 0) + points;
+                    localStorage.setItem('puzzleScores', JSON.stringify(scores));
+                    localStorage.setItem('puzzleSolved', JSON.stringify(solved));
+                }
+            } else {
+                result.className = 'result wrong';
+                result.textContent = '❌ Try again!';
+            }
+        }
+
+        function showHint() {
+            document.getElementById('hint').style.display = 'block';
+        }
+
+        function nextPuzzle() {
+            if (currentIndex < puzzles[currentCategory].length - 1) {
+                currentIndex++;
+                showPuzzle();
+            }
+        }
+
+        function prevPuzzle() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                showPuzzle();
+            }
+        }
+
+        function showStats() {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('puzzle-container').style.display = 'none';
+            const container = document.getElementById('stats-container');
+
+            const sortedScores = Object.entries(scores).sort((a,b) => b[1] - a[1]);
+            const leaderboardHTML = sortedScores.length ? sortedScores.map((s, i) =>
+                `<div class="leaderboard-entry"><span>${['🥇','🥈','🥉'][i] || '  '} ${s[0]}</span><span>${s[1]} pts</span></div>`
+            ).join('') : '<p style="text-align:center;color:#888">No scores yet. Be the first!</p>';
+
+            container.innerHTML = `
+                <div class="stats">
+                    <h2>🏆 Leaderboard</h2>
+                    <div class="stat-row">
+                        <div class="stat"><div class="stat-value">${solved.length}</div><div class="stat-label">Puzzles Solved</div></div>
+                        <div class="stat"><div class="stat-value">${Object.keys(puzzles).reduce((a,k) => a + puzzles[k].length, 0)}</div><div class="stat-label">Total Puzzles</div></div>
+                    </div>
+                    <div class="leaderboard">${leaderboardHTML}</div>
+                </div>
+            `;
+            container.style.display = 'block';
+        }
+
+        showPuzzle();
+    </script>
+</body>
+</html>
