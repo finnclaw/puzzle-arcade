@@ -207,6 +207,21 @@
             border-radius: 50%;
         }
         .chess-square.valid-capture { background: #ffaaaa !important; }
+        .valid-move-target {
+            cursor: pointer;
+            background: rgba(0, 255, 0, 0.3);
+            border-radius: 50%;
+        }
+        .valid-move-target:hover {
+            background: rgba(0, 255, 0, 0.5);
+        }
+        .piece-label {
+            font-size: 8px;
+            position: absolute;
+            bottom: 2px;
+            color: #fff;
+            text-shadow: 1px 1px 2px #000;
+        }
         .chess-square.last-move { box-shadow: inset 0 0 0 3px #ffff00; }
         .chess-square:hover { opacity: 0.8; }
         .chess-info {
@@ -478,6 +493,36 @@
             'wK': '♔', 'wQ': '♕', 'wR': '♖', 'wB': '♗', 'wN': '♘', 'wP': '♙',
             'bK': '♚', 'bQ': '♛', 'bR': '♜', 'bB': '♝', 'bN': '♞', 'bP': '♟'
         };
+        
+        // Piece labels - white uses P1-P16, R1-R2, N1-N2, B1-B2, Q1, K1
+        // Black opponent uses OP1-OP16, OR1-OR2, etc.
+        const pieceLabels = {
+            'wP': ['P1','P2','P3','P4','P5','P6','P7','P8'],
+            'wR': ['R1','R2'], 'wN': ['N1','N2'], 'wB': ['B1','B2'], 'wQ': ['Q1'], 'wK': ['K1'],
+            'bP': ['OP1','OP2','OP3','OP4','OP5','OP6','OP7','OP8'],
+            'bR': ['OR1','OR2'], 'bN': ['ON1','ON2'], 'bB': ['OB1','OB2'], 'bQ': ['OQ1'], 'bK': ['OK1']
+        };
+        
+        function getPieceLabel(piece, square) {
+            if (!piece || !square) return '';
+            const key = piece.color + piece.type.toUpperCase();
+            const labels = pieceLabels[key];
+            if (!labels) return '';
+            // Find which piece this is by checking all squares
+            const board = chess.board();
+            let labelIndex = 0;
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    const sq = String.fromCharCode(97 + col) + (8 - row);
+                    const p = board[row][col];
+                    if (p && p.color === piece.color && p.type === piece.type) {
+                        if (sq === square) return labels[labelIndex] + '=' + sq;
+                        labelIndex++;
+                    }
+                }
+            }
+            return labels[0] || '';
+        }
 
         function initChess() {
             chess = new Chess();
@@ -540,8 +585,15 @@
 
                     const pieceKey = piece ? (piece.color + piece.type.toUpperCase()) : '';
                     const pieceChar = piece ? pieceSymbols[pieceKey] : '';
+                    
+                    // Get piece label (e.g., "P1=a2")
+                    const pieceLabel = piece ? getPieceLabel(piece, square) : '';
+                    // Show label below piece
+                    const labelHtml = pieceLabel ? `<span style="font-size:8px;position:absolute;bottom:2px;">${pieceLabel.split('=')[0]}</span>` : '';
+                    // Show valid move target as clickable span
+                    const moveTargetHtml = isValidMove ? `<span class="valid-move-target" data-square="${square}" onclick="clickSquare('${square}')" style="position:absolute;width:100%;height:100%;z-index:10;"></span>` : '';
 
-                    boardHtml += `<div class="${classes}" onclick="clickSquare('${square}')">${pieceChar}</div>`;
+                    boardHtml += `<div class="${classes}" onclick="clickSquare('${square}')" style="position:relative;">${pieceChar}${labelHtml}${moveTargetHtml}</div>`;
                 }
             }
             boardHtml += '</div>';
